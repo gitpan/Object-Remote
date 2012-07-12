@@ -1,0 +1,103 @@
+NAME
+    Object::Remote - Call methods on objects in other processes or on other
+    hosts
+
+SYNOPSIS
+    Creating a connection:
+
+      use Object::Remote;
+
+      my $conn = Object::Remote->connect('myserver'); # invokes ssh
+
+    Calling a subroutine:
+
+      my $capture = IPC::System::Simple->can::on($conn, 'capture');
+
+      warn $capture->('uptime');
+
+    Using an object:
+
+      my $eval = Eval::WithLexicals->new::on($conn);
+
+      $eval->eval(q{my $x = `uptime`});
+
+      warn $eval->eval(q{$x});
+
+    Importantly: 'myserver' only requires perl 5.8+ - no non-core modules
+    need to be installed on the far side, Object::Remote takes care of it
+    for you!
+
+DESCRIPTION
+    Object::Remote allows you to create an object in another process -
+    usually one running on another machine you can connect to via ssh,
+    although there are other connection mechanisms available.
+
+    The idea here is that in many cases one wants to be able to run a piece
+    of code on another machine, or perhaps many other machines - but without
+    having to install anything on the far side.
+
+COMPONENTS
+  Object::Remote
+    The "main" API, which provides the "connect" method to create a
+    connection to a remote process/host, "new::on" to create an object on a
+    connection, and "can::on" to retrieve a subref over a connection.
+
+  Object::Remote::Connection
+    The object representing a connection, which provides the "remote_object"
+    in Object::Remote::Connection and "remote_sub" in
+    Object::Remote::Connection methods that are used by "new::on" and
+    "can::on" to return proxies for objects and subroutines on the far side.
+
+  Object::Remote::Future
+    Code for dealing with asynchronous operations, which provides the
+    "start::method" in Object::Remote::Future syntax for calling a possibly
+    asynchronous method without blocking, and "await_future" in
+    Object::Remote::Future and "await_all" in Object::Remote::Future to
+    block until an asynchronous call completes or fails.
+
+METHODS
+  connect
+      my $conn = Object::Remote->connect('-'); # fork()ed connection
+
+      my $conn = Object::Remote->connect('myserver'); # connection over ssh
+
+      my $conn = Object::Remote->connect('user@myserver'); # connection over ssh
+
+      my $conn = Object::Remote->connect('root@'); # connection over sudo
+
+  new::on
+      my $eval = Eval::WithLexicals->new::on($conn);
+
+      my $eval = Eval::WithLexicals->new::on('myserver'); # implicit connect
+
+      my $obj = Some::Class->new::on($conn, %args); # with constructor arguments
+
+  can::on
+      my $hostname = Sys::Hostname->can::on($conn, 'hostname');
+
+      my $hostname = Sys::Hostname->can::on('myserver', 'hostname');
+
+SUPPORT
+    IRC: #web-simple on irc.perl.org
+
+AUTHOR
+    mst - Matt S. Trout (cpan:MSTROUT) <mst@shadowcat.co.uk>
+
+CONTRIBUTORS
+    phaylon - Robert Sedlacek (cpan:PHAYLON) <r.sedlacek@shadowcat.co.uk>
+
+SPONSORS
+    Parts of this code were paid for by
+
+      Socialflow L<http://www.socialflow.com>
+
+      Shadowcat Systems L<http://www.shadow.cat>
+
+COPYRIGHT
+    Copyright (c) 2012 the Object::Remote "AUTHOR", "CONTRIBUTORS" and
+    "SPONSORS" as listed above.
+
+LICENSE
+    This library is free software and may be distributed under the same
+    terms as perl itself.
+
