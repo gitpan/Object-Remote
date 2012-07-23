@@ -4,7 +4,7 @@ use Object::Remote::MiniLoop;
 use Object::Remote::Handle;
 use Module::Runtime qw(use_module);
 
-our $VERSION = '0.001001'; # 0.1.1
+our $VERSION = '0.002002'; # 0.2.2
 
 sub new::on {
   my ($class, $on, @args) = @_;
@@ -25,7 +25,7 @@ sub new {
 
 sub connect {
   my ($class, $to) = @_;
-  use_module('Object::Remote::Connection')->new_from_spec($to);
+  use_module('Object::Remote::Connection')->maybe::start::new_from_spec($to);
 }
 
 sub current_loop {

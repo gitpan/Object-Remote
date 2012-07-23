@@ -12,14 +12,19 @@ lib/Object/Remote/Connector/SSH.pm
 lib/Object/Remote/Connector/STDIO.pm
 lib/Object/Remote/Connector/UNIX.pm
 lib/Object/Remote/FatNode.pm
+lib/Object/Remote/FromData.pm
 lib/Object/Remote/Future.pm
+lib/Object/Remote/GlobContainer.pm
+lib/Object/Remote/GlobProxy.pm
 lib/Object/Remote/Handle.pm
 lib/Object/Remote/MiniLoop.pm
 lib/Object/Remote/ModuleLoader.pm
 lib/Object/Remote/ModuleSender.pm
 lib/Object/Remote/Node.pm
 lib/Object/Remote/Null.pm
+lib/Object/Remote/Prompt.pm
 lib/Object/Remote/Proxy.pm
+lib/Object/Remote/ReadChannel.pm
 lib/Object/Remote/Role/Connector.pm
 lib/Object/Remote/Role/Connector/PerlInterpreter.pm
 maint/Makefile.PL.include
@@ -27,10 +32,17 @@ Makefile.PL
 MANIFEST			This list of files
 t/await.t
 t/basic.t
+t/basic_data.t
 t/bridged.t
+t/data/numbers.txt
 t/lib/ORTestBridge.pm
 t/lib/ORTestClass.pm
+t/lib/ORTestGlobs.pm
+t/lib/ORTestTransfer.pm
 t/sender.t
+t/start_core.t
+t/timeout.t
+t/transfer.t
 xt/bridged-remote.t
 xt/lib/TestBridge.pm
 xt/lib/TestClass.pm

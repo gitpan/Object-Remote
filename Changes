@@ -1,2 +1,14 @@
+0.002002 - 2012-07-23
+  - timeouts for connection setup
+  - support Object::Remote->start::connect
+  - timer support in MiniLoop
+
+0.002001 - 2012-07-18
+  - start::, maybe::start:: and next::
+  - automatic prompting for sudo passwords
+  - allow transfer of glob references
+  - allow loading of classes and packages from __DATA__
+  - allow transfer of scalar references
+
 0.001001 - 2012-07-12
   - initial release

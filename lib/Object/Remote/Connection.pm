@@ -4,7 +4,10 @@ use Object::Remote::Future;
 use Object::Remote::Null;
 use Object::Remote::Handle;
 use Object::Remote::CodeContainer;
+use Object::Remote::GlobProxy;
+use Object::Remote::GlobContainer;
 use Object::Remote;
+use Symbol;
 use IO::Handle;
 use Module::Runtime qw(use_module);
 use Scalar::Util qw(weaken blessed refaddr);
@@ -18,28 +21,28 @@ has send_to_fh => (
   trigger => sub { $_[1]->autoflush(1) },
 );
 
-has receive_from_fh => (
+has read_channel => (
   is => 'ro', required => 1,
   trigger => sub {
-    my ($self, $fh) = @_;
+    my ($self, $ch) = @_;
     weaken($self);
-    Object::Remote->current_loop
-                  ->watch_io(
-                      handle => $fh,
-                      on_read_ready => sub { $self->_receive_data_from($fh) }
-                    );
+    $ch->on_line_call(sub { $self->_receive(@_) });
+    $ch->on_close_call(sub { $self->on_close->done(@_) });
   },
 );
 
-has on_close => (is => 'rw', default => sub { CPS::Future->new });
+has on_close => (
+  is => 'ro', default => sub { CPS::Future->new },
+  trigger => sub { 
+    my ($self, $f) = @_;
+    weaken($self);
+    $f->on_done(sub {
+      $self->_fail_outstanding("Connection lost: ".($f->get)[0]);
+    });
+  }
+);
 
 has child_pid => (is => 'ro');
-
-has ready_future => (is => 'lazy');
-
-sub _build_ready_future { CPS::Future->new }
-
-has _receive_data_buffer => (is => 'ro', default => sub { my $x = ''; \$x });
 
 has local_objects_by_id => (
   is => 'ro', default => sub { {} },
@@ -52,6 +55,14 @@ has remote_objects_by_id => (
 );
 
 has outstanding_futures => (is => 'ro', default => sub { {} });
+
+sub _fail_outstanding {
+  my ($self, $error) = @_;
+  my $outstanding = $self->outstanding_futures;
+  $_->fail($error) for values %$outstanding;
+  %$outstanding = ();
+  return;
+}
 
 has _json => (
   is => 'lazy',
@@ -81,6 +92,18 @@ sub _build__json {
       my $code_container = $self->_id_to_remote_object(@_);
       sub { $code_container->call(@_) };
     }
+  )->filter_json_single_key_object(
+    __scalar_ref__ => sub {
+      my $value = shift;
+      return \$value;
+    }
+  )->filter_json_single_key_object(
+    __glob_ref__ => sub {
+      my $glob_container = $self->_id_to_remote_object(@_);
+      my $handle = Symbol::gensym;
+      tie *$handle, 'Object::Remote::GlobProxy', $glob_container;
+      return $handle;
+    }
   );
 }
 
@@ -96,7 +119,9 @@ sub new_from_spec {
   my ($class, $spec) = @_;
   return $spec if blessed $spec;
   foreach my $poss (do { our @Guess }) {
-    if (my $obj = $poss->($spec)) { return $obj }
+    if (my $conn = $poss->($spec)) {
+      return $conn->maybe::start::connect;
+    }
   }
   die "Couldn't figure out what to do with ${spec}";
 }
@@ -150,11 +175,6 @@ sub register_remote {
   return $remote;
 }
 
-sub await_ready {
-  my ($self) = @_;
-  await_future($self->ready_future);
-}
-
 sub send_free {
   my ($self, $id) = @_;
   delete $self->remote_objects_by_id->{$id};
@@ -191,8 +211,6 @@ sub send_discard {
 
 sub _send {
   my ($self, $to_send) = @_;
-
-  $self->await_ready;
 
   print { $self->send_to_fh } $self->_serialize($to_send)."\n";
 }
@@ -236,41 +254,17 @@ sub _deobjectify {
                  Object::Remote::CodeContainer->new(code => $data)
                );
       return +{ __remote_code__ => $id };
+    } elsif ($ref eq 'SCALAR') {
+      return +{ __scalar_ref__ => $$data };
+    } elsif ($ref eq 'GLOB') {
+      return +{ __glob_ref__ => $self->_local_object_to_id(
+        Object::Remote::GlobContainer->new(handle => $data)
+      ) };
     } else {
       die "Can't collapse reftype $ref";
     }
   }
   return $data; # plain scalar
-}
-
-sub _receive_data_from {
-  my ($self, $fh) = @_;
-  my $rb = $self->_receive_data_buffer;
-  my $ready = $self->ready_future->is_ready;
-  my $len = sysread($fh, $$rb, 1024, length($$rb));
-  my $err = defined($len) ? '' : ": $!";
-  if (defined($len) and $len > 0) {
-    while ($$rb =~ s/^(.*)\n//) {
-      if ($ready) {
-        $self->_receive($1);
-      } else {
-        my $line = $1;
-        die "New remote container did not send Shere - got ${line}"
-          unless $line eq "Shere";
-        $self->ready_future->done;
-      }
-    }
-  } else {
-    Object::Remote->current_loop
-                  ->unwatch_io(
-                      handle => $self->receive_from_fh,
-                      on_read_ready => 1
-                    );
-    my $outstanding = $self->outstanding_futures;
-    $_->fail("Connection lost${err}") for values %$outstanding;
-    %$outstanding = ();
-    $self->on_close->done();
-  }
 }
 
 sub _receive {
@@ -324,16 +318,6 @@ sub _invoke {
     1;
   } or do { $future->fail($@); return; };
   return;
-}
-
-sub DEMOLISH {
-  my ($self, $gd) = @_;
-  return if $gd;
-  Object::Remote->current_loop
-                ->unwatch_io(
-                    handle => $self->receive_from_fh,
-                    on_read_ready => 1
-                  );
 }
 
 1;

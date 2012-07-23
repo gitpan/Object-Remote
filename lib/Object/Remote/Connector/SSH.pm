@@ -6,10 +6,16 @@ use Moo;
 
 with 'Object::Remote::Role::Connector::PerlInterpreter';
 
-around _perl_command => sub {
-  my ($orig, $self, $target) = @_;
-  return 'ssh', '-A', $target, $self->$orig($target);
-};
+has ssh_to => (is => 'ro', required => 1);
+
+has ssh_perl_command => (is => 'lazy');
+
+sub _build_ssh_perl_command {
+  my ($self) = @_;
+  return [ 'ssh', '-A', $self->ssh_to, @{$self->perl_command} ];
+}
+
+sub final_perl_command { shift->ssh_perl_command }
 
 no warnings 'once';
 
@@ -17,7 +23,7 @@ push @Object::Remote::Connection::Guess, sub {
   for ($_[0]) {
     # 0-9 a-z _ - first char, those or . subsequent - hostnamish
     if (defined and !ref and /^(?:.*?\@)?[\w\-][\w\-\.]/) {
-      return __PACKAGE__->new->connect($_[0]);
+      return __PACKAGE__->new(ssh_to => $_[0]);
     }
   }
   return;
