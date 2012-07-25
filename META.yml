@@ -19,7 +19,8 @@ no_index:
     - inc
 requires:
   CPS::Future: 0
+  Class::C3: 0
   JSON::PP: 0
   Module::Runtime: 0
   Moo: 0
-version: 0.002002
+version: 0.002003
