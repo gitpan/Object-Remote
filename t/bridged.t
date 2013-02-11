@@ -5,6 +5,8 @@ use FindBin;
 
 use lib "$FindBin::Bin/lib";
 
+$ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
+
 use Object::Remote;
 
 is exception {

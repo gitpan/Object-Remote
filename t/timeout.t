@@ -1,11 +1,13 @@
 use strictures 1;
 use Test::More;
 
+$ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
+
 use Object::Remote;
 use Object::Remote::Connector::Local;
 
 my $connector = Object::Remote::Connector::Local->new(
-  timeout => { after => 0.1 },
+  timeout => 0.1,
   perl_command => [ 'perl', '-e', 'sleep 3' ],
 );
 

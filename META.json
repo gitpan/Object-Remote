@@ -4,7 +4,7 @@
       "mst - Matt S. Trout (cpan:MSTROUT) <mst@shadowcat.co.uk>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630",
    "license" : [
       "perl_5"
    ],
@@ -35,11 +35,13 @@
             "CPS::Future" : "0",
             "Class::C3" : "0",
             "JSON::PP" : "0",
+            "Log::Contextual" : "0.005",
             "Module::Runtime" : "0",
-            "Moo" : "0"
+            "Moo" : "0",
+            "String::ShellQuote" : "0"
          }
       }
    },
-   "release_status" : "stable",
-   "version" : "0.002003"
+   "release_status" : "testing",
+   "version" : "0.003001_01"
 }

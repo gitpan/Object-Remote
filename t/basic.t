@@ -2,6 +2,8 @@ use strictures 1;
 use Test::More;
 use Sys::Hostname qw(hostname);
 
+$ENV{OBJECT_REMOTE_TEST_LOGGER} = 1;
+
 use Object::Remote;
 
 $ENV{PERL5LIB} = join(
