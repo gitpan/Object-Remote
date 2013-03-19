@@ -8,10 +8,11 @@ WriteMakefile(
   NAME => 'Object::Remote',
   VERSION_FROM => 'lib/Object/Remote.pm',
   PREREQ_PM => {
-    Moo => 0,
+    Moo => 1.001,
     'Module::Runtime' => 0,
     'JSON::PP' => 0,
-    'CPS::Future' => 0,
+    'Future' => 0.10,
+    'MRO::Compat' => 0, # required to fatpack Moo
     'Class::C3' => 0, # required to fatpack Moo
     'String::ShellQuote' => 0, # required for ssh argument manipulation
     'Log::Contextual' => 0.005000
