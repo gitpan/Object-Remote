@@ -24,6 +24,6 @@ requires:
   Log::Contextual: '0.005'
   MRO::Compat: '0'
   Module::Runtime: '0'
-  Moo: '1.001'
+  Moo: '1.006'
   String::ShellQuote: '0'
-version: '0.003003'
+version: '0.003004'
